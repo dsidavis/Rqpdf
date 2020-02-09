@@ -13,12 +13,25 @@ qpdf = function(filename = character(), obj = new("QPDF"))
 }
 
 
-setOldClass("QPDFReference")
+# setOldClass("QPDFReference")
+setOldClass(c("PDFPage", "Page", "QPDFReference"))
 
 setMethod("[[", c("QPDF", "QPDFReference"),
           function(x, i, streamData = FALSE, ...) {
               .Call("R_getObjectByID", x@ref, i, as.logical(streamData)) # if we use id.gen in C code - as.integer(strsplit(i, ".", fixed = TRUE)[[1]]))
           })
+
+
+setMethod("[[", c("QPDF", "numeric"),
+          function(x, i, asRef = FALSE, streamData = FALSE, ...) {
+             p = getPages(x)
+             ref = p[[i]]
+             if(asRef)
+                 return(ref)
+
+             x[[ ref, streamData = streamData ]]
+          })
+
 
 getRoot =
 function(doc, streamData = FALSE)
