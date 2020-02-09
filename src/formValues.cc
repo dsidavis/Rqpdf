@@ -52,10 +52,21 @@ R_getFormValues(SEXP r_filename)
 }
 
 SEXP
-convertQPDFArrayToR(QPDFObjectHandle h, bool streamData = false)
+convertQPDFArrayToR(QPDFObjectHandle h, bool streamData = false, bool asRectangle = true)
 {
-    int len = h.getArrayNItems();
     SEXP ans;
+    if(asRectangle && h.isRectangle()) {
+        PROTECT(ans = NEW_NUMERIC(4));
+        QPDFObjectHandle::Rectangle r = h.getArrayAsRectangle();
+        REAL(ans)[0] = r.llx;
+        REAL(ans)[1] = r.lly;
+        REAL(ans)[2] = r.urx;
+        REAL(ans)[3] = r.ury;
+        SET_CLASS(ans, ScalarString(mkChar("Rectangle")));
+        return(ans);
+    }
+    
+    int len = h.getArrayNItems();
     PROTECT(ans = NEW_LIST(len));
     for(int i = 0; i < len; i++) 
         SET_VECTOR_ELT(ans, i, QPDFObjectHandleToR(h.getArrayItem(i), false, true, streamData));
