@@ -52,20 +52,20 @@ R_getFormValues(SEXP r_filename)
 }
 
 SEXP
-convertQPDFArrayToR(QPDFObjectHandle h)
+convertQPDFArrayToR(QPDFObjectHandle h, bool streamData = false)
 {
     int len = h.getArrayNItems();
     SEXP ans;
     PROTECT(ans = NEW_LIST(len));
     for(int i = 0; i < len; i++) 
-        SET_VECTOR_ELT(ans, i, QPDFObjectHandleToR(h.getArrayItem(i)));
-
+        SET_VECTOR_ELT(ans, i, QPDFObjectHandleToR(h.getArrayItem(i), false, true, streamData));
+    
     UNPROTECT(1);
     return(ans);
 }
 
 SEXP
-convertQPDFDictToR(QPDFObjectHandle h, bool followGen, bool stripSlash)
+convertQPDFDictToR(QPDFObjectHandle h, bool followGen, bool stripSlash, bool streamData)
 {
     std::set<std::string> keys = h.getKeys();
     int len = keys.size(), i = 0;
@@ -74,7 +74,7 @@ convertQPDFDictToR(QPDFObjectHandle h, bool followGen, bool stripSlash)
     PROTECT(names = NEW_CHARACTER(len));
     std::set<std::string>::iterator it = keys.begin();
     for( ; i < len; i++, ++it) {
-        SET_VECTOR_ELT(ans, i, QPDFObjectHandleToR(h.getKey(*it)));
+        SET_VECTOR_ELT(ans, i, QPDFObjectHandleToR(h.getKey(*it), false, true, streamData));
         SET_STRING_ELT(names, i, mkChar(it->c_str() + 1));
     }
     SET_NAMES(ans, names);
@@ -102,7 +102,7 @@ mkPDFIdGenRobj(QPDFObjectHandle h)
 }
 
 SEXP
-QPDFObjectHandleToR(QPDFObjectHandle h, bool followGen, bool stripSlash)
+QPDFObjectHandleToR(QPDFObjectHandle h, bool followGen, bool stripSlash, bool streamData)
 {
     bool isOID = (h.getObjectID() > 0); 
 
@@ -125,14 +125,38 @@ QPDFObjectHandleToR(QPDFObjectHandle h, bool followGen, bool stripSlash)
         ans = ScalarString(mkChar(h.getName().c_str()));
         break;
     case QPDFObject::ot_array:
-        ans = convertQPDFArrayToR(h);
+        ans = convertQPDFArrayToR(h, streamData);
         break;
     case QPDFObject::ot_dictionary:
         if(!followGen && isOID)   // do we want to do this generally for all types of objects.
             ans = mkPDFIdGenRobj(h);
         else
-            ans = convertQPDFDictToR(h, followGen, stripSlash);
-        break;                                                                   
+            ans = convertQPDFDictToR(h, followGen, stripSlash, streamData);
+        break;
+    case QPDFObject::ot_stream:
+        if(streamData) {
+            PointerHolder<Buffer> d = h.getStreamData();
+            size_t sz = d->getSize();
+            PROTECT(ans = Rf_allocVector(RAWSXP, sz));
+            memcpy(RAW(ans), d->getBuffer(), sz);
+            SET_CLASS(ans, ScalarString(mkChar("PDFStream")));
+        } else {
+            PROTECT(ans = ScalarString(mkChar(h.unparse().c_str())));
+            SET_NAMES(ans, ScalarString(mkChar(h.getTypeName())));
+        }
+        
+        UNPROTECT(1);
+        break;
+    case QPDFObject::ot_operator:
+        PROTECT(ans = ScalarString(mkChar(h.getOperatorValue().c_str())));        
+        SET_NAMES(ans, ScalarString(mkChar(h.getTypeName())));
+        UNPROTECT(1);
+        break;        
+    case QPDFObject::ot_inlineimage:
+        PROTECT(ans = ScalarString(mkChar(h.getInlineImageValue().c_str())));        
+        SET_NAMES(ans, ScalarString(mkChar(h.getTypeName())));
+        UNPROTECT(1);
+        break;
     default:
         ans = R_NilValue;            
         break;            
@@ -168,7 +192,7 @@ FieldObjHelperToR(QPDFFormFieldObjectHelper ffh)
     SET_VECTOR_ELT(ans, field, ScalarString(mkChar(ffh.getMappingName().c_str())));
     SET_STRING_ELT(names, field++, mkChar("name"));
 
-    SET_VECTOR_ELT(ans, field, QPDFObjectHandleToR(ffh.getValue()));
+    SET_VECTOR_ELT(ans, field, QPDFObjectHandleToR(ffh.getValue())); // XX add streamData - ever needed?
     SET_STRING_ELT(names, field++, mkChar("value"));
 
     SET_VECTOR_ELT(ans, field, QPDFObjectHandleToR(ffh.getDefaultValue()));

@@ -1,10 +1,10 @@
 
 setClass("QPDF", list(ref = "externalptr"))
 
-qpdf = function(filename, obj = new("QPDF"))
+qpdf = function(filename = character(), obj = new("QPDF"))
 {
     filename = path.expand(filename)
-    if(!file.exists(filename))
+    if(length(filename) && !file.exists(filename))
         stop(filename, " does not exist as a file")
 
     qpdf = .Call("R_getQPDF", filename)
@@ -16,26 +16,66 @@ qpdf = function(filename, obj = new("QPDF"))
 setOldClass("QPDFReference")
 
 setMethod("[[", c("QPDF", "QPDFReference"),
-          function(x, i, ...) {
-              .Call("R_getObjectByID", x@ref, i) # if we use id.gen in C code - as.integer(strsplit(i, ".", fixed = TRUE)[[1]]))
+          function(x, i, streamData = FALSE, ...) {
+              .Call("R_getObjectByID", x@ref, i, as.logical(streamData)) # if we use id.gen in C code - as.integer(strsplit(i, ".", fixed = TRUE)[[1]]))
           })
 
 getRoot =
-function(doc)
+function(doc, streamData = FALSE)
 {
     doc = as(doc, "QPDF")
-    .Call("R_getRoot_QPDF", doc@ref, TRUE)
+    .Call("R_getRoot_QPDF", doc@ref, TRUE, as.logical(streamData))
 }
 
 getTrailer =
+function(doc, streamData = FALSE)
+{
+    doc = as(doc, "QPDF")
+    .Call("R_getRoot_QPDF", doc@ref, FALSE, as.logical(streamData))
+}
+
+getWarnings =
 function(doc)
 {
     doc = as(doc, "QPDF")
-    .Call("R_getRoot_QPDF", doc@ref, FALSE)
+    .Call("R_qpdf_getWarnings", doc@ref)
+}
+
+processFile =
+function(doc, file, passwd = character(), warnings = TRUE)
+{
+    file = path.expand(file)
+    if(!file.exists(file))
+        stop(file, " does not exist")
+    
+    doc = as(doc, "QPDF")
+    if(warnings)
+        suppressWarnings(doc, TRUE)
+    .Call("R_qpdf_processFile", doc@ref, file, as.character(passwd))
+    if(warnings)
+        showWarnings(doc)
+    else
+        TRUE
+}
+
+showWarnings =
+function(qpdf)
+{
+    w = getWarnings(qpdf)
+    if(length(w))
+        sapply(w, function(x) warning(x$message))
+    length(w) == 0
+}
+
+suppressWarnings =
+function(doc, val = TRUE)
+{
+    doc = as(doc, "QPDF")
+    .Call("R_qpdf_setSuppressWarnings", doc@ref, as.logical(val))
 }
 
 
-
+# See below for alternative version
 getAllDicts =
 function(doc, root = getRoot(doc), trailer = getTrailer(doc))
 {
@@ -60,7 +100,6 @@ cat("getting ", paste(names(tmp), collapse = ", "), "\n")
 findQPDFReferences =
 function(obj)
 {
-
    tmp = lapply(obj, function(x)
                   if(is(x, 'QPDFReference'))
                      x
@@ -85,7 +124,6 @@ function(obj)
 findQPDFReferences =
 function(obj)
 {
-
    tmp = lapply(obj, function(x)
                   if(is(x, 'QPDFReference'))
                      paste(x, collapse = ".")

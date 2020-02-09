@@ -1,5 +1,8 @@
 #include "Rqpdf.h"
 
+QPDF *R_get_QPDF(SEXP r_qpdf);
+#define GET_QPDF(x) (QPDF *) R_get_QPDF((x))
+
 extern "C"
 SEXP
 R_getRoot(SEXP r_filename)
@@ -12,11 +15,11 @@ R_getRoot(SEXP r_filename)
 
 extern "C"
 SEXP
-R_getRoot_QPDF(SEXP r_qpdf, SEXP r_root)
+R_getRoot_QPDF(SEXP r_qpdf, SEXP r_root, SEXP streamData)
 {
-   QPDF *qpdf = (QPDF*) R_ExternalPtrAddr(r_qpdf);    
+   QPDF *qpdf = GET_QPDF(r_qpdf);    
    QPDFObjectHandle r = LOGICAL(r_root)[0] ? qpdf->getRoot() : qpdf->getTrailer();
-   return(QPDFObjectHandleToR(r, true));
+   return(QPDFObjectHandleToR(r, true, true, LOGICAL(streamData)[0]));
 }
 
 
@@ -56,6 +59,76 @@ R_getQPDF(SEXP r_filename)
 }
 
 
+extern "C"
+SEXP
+R_qpdf_processFile(SEXP r_qpdf, SEXP r_filename, SEXP r_password)
+{
+    QPDF *qpdf = GET_QPDF(r_qpdf);
+    const char *passwd = NULL;
+    if(Rf_length(r_password))
+        passwd = CHAR(STRING_ELT(r_password, 0));
+    
+    qpdf->processFile(CHAR(STRING_ELT(r_filename, 0)), passwd);
+    return(R_NilValue);
+}
+
+
+extern "C"
+SEXP
+R_qpdf_getFilename(SEXP r_qpdf)
+{
+    QPDF *qpdf = GET_QPDF(r_qpdf);        
+    const char * str = qpdf->getFilename().c_str();
+    return(ScalarString(str ? mkChar(str) : R_NaString));
+}
+
+
+extern "C"
+SEXP
+R_qpdf_setSuppressWarnings(SEXP r_qpdf, SEXP val)
+{
+    QPDF *qpdf = GET_QPDF(r_qpdf);   
+    qpdf->setSuppressWarnings(LOGICAL(val)[0]);
+    return(R_NilValue);
+}
+
+SEXP
+R_mkQPDFExc(QPDFExc w)
+{
+    SEXP ans, names;
+    int idx = 0;
+
+    PROTECT(ans = NEW_LIST( 4 ));
+    PROTECT(names = NEW_CHARACTER(4));
+    SET_VECTOR_ELT(ans, idx, ScalarString(mkChar(w.getMessageDetail().c_str())));
+    SET_STRING_ELT(names, idx++, mkChar("message"));
+    SET_VECTOR_ELT(ans, idx, ScalarString(mkChar(w.getFilename().c_str())));
+    SET_STRING_ELT(names, idx++, mkChar("filename"));    
+    SET_VECTOR_ELT(ans, idx, ScalarString(mkChar(w.getObject().c_str())));
+    SET_STRING_ELT(names, idx++, mkChar("object"));    
+    SET_VECTOR_ELT(ans, idx, ScalarReal(w.getFilePosition()));
+    SET_STRING_ELT(names, idx++, mkChar("filePosition"));
+    SET_NAMES(ans, names);
+    UNPROTECT(2);
+    return(ans);
+}
+
+extern "C"
+SEXP
+R_qpdf_getWarnings(SEXP r_qpdf)
+{
+    QPDF *qpdf = GET_QPDF(r_qpdf);
+    std::vector<QPDFExc> w = qpdf->getWarnings();
+    SEXP ans;
+    PROTECT(ans = NEW_LIST(w.size()));
+    
+    for(int i = 0; i < w.size(); i++) 
+        SET_VECTOR_ELT(ans, i, R_mkQPDFExc(w[i]));
+
+    UNPROTECT(1);
+    return(ans);
+}
+
 
 extern "C"
 SEXP
@@ -88,10 +161,24 @@ R_qpdf_dictKeys(QPDFObjectHandle h)
 
 extern "C"
 SEXP
-R_getObjectByID(SEXP r_qpdf, SEXP id)
+R_getObjectByID(SEXP r_qpdf, SEXP id, SEXP streamData)
 {
-    QPDF *qpdf = (QPDF*) R_ExternalPtrAddr(r_qpdf);
+    QPDF *qpdf = GET_QPDF(r_qpdf);
     QPDFObjectHandle o;
     o = qpdf->getObjectByID(INTEGER(id)[0], INTEGER(id)[1]);
-    return(QPDFObjectHandleToR(o, true));
+    return(QPDFObjectHandleToR(o, true, true, LOGICAL(streamData)[0]));
+}
+
+QPDF *
+R_get_QPDF(SEXP r_qpdf)
+{
+    if(TYPEOF(r_qpdf) == S4SXP) 
+        r_qpdf = GET_SLOT(r_qpdf, Rf_install("ref"));
+    if(TYPEOF(r_qpdf) != EXTPTRSXP) {
+        PROBLEM "need an external pointer or S4 object with a 'ref' slot for a QPDF external object"
+         ERROR;
+    }
+        
+    QPDF *q = (QPDF*) R_ExternalPtrAddr(r_qpdf);
+    return(q);
 }
