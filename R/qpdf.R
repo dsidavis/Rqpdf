@@ -1,5 +1,10 @@
 
-setClass("QPDF", list(ref = "externalptr"))
+setClass("QPDFNativeObject", list(ref = "externalptr"))
+setClass("QPDF", contains = "QPDFNativeObject")
+setClass("QPDFObject", contains = "QPDFNativeObject")
+setClass("QPDFDict", contains = "QPDFObject")
+setClass("QPDFArray", contains = "QPDFObject")
+setClass("QPDFStream", contains = "QPDFObject")
 
 qpdf = function(filename = character(), obj = new("QPDF"))
 {
@@ -17,13 +22,32 @@ qpdf = function(filename = character(), obj = new("QPDF"))
 setOldClass(c("PDFPage", "Page", "QPDFReference"))
 
 setMethod("[[", c("QPDF", "QPDFReference"),
-          function(x, i, streamData = FALSE, ...) {
-              .Call("R_getObjectByID", x@ref, i, as.logical(streamData)) # if we use id.gen in C code - as.integer(strsplit(i, ".", fixed = TRUE)[[1]]))
+          function(x, i, streamData = FALSE, asRef = FALSE, ...) {
+              # if we use id.gen in C code - as.integer(strsplit(i, ".", fixed = TRUE)[[1]]))
+              
+              ans = .Call("R_getObjectByID", x@ref, i, as.logical(streamData), as.logical(asRef))
+              if(asRef)
+                  asQPDFRef(ans)
+              else
+                  ans
           })
 
 
+
+
+
+setMethod("[[", c("QPDF", "character"),
+          function(x, i, streamData = FALSE, asRef = FALSE, ...) {
+              i = strsplit(i, "\\.")[[1]]
+              i = as.integer(i)
+              if(length(i) != 2 || any(is.na(i)))
+                  stop("invalid QPDF object reference")
+
+              x[[ structure(i, class = "QPDFReference"), streamData = streamData, asRef = asRef, ... ]]
+          })
+
 setMethod("[[", c("QPDF", "numeric"),
-          function(x, i, asRef = FALSE, streamData = FALSE, ...) {
+          function(x, i, j, asRef = FALSE, streamData = FALSE, ...) {
              p = getPages(x)
              ref = p[[i]]
              if(asRef)
@@ -102,7 +126,7 @@ function(doc, root = getRoot(doc), trailer = getTrailer(doc))
         tmp = tmp[ !(names(tmp) %in% ls(e)) ]
         if(length(tmp) == 0)
             break
-cat("getting ", paste(names(tmp), collapse = ", "), "\n")
+#cat("getting ", paste(names(tmp), collapse = ", "), "\n")
         tmp = lapply(names(tmp), function(id) assign(id, doc[[ tmp[[ id ]] ]], e))
 #        tmp = unlist(tmp, recursive = FALSE)
     }
@@ -111,6 +135,7 @@ cat("getting ", paste(names(tmp), collapse = ", "), "\n")
 }
 
 findQPDFReferences =
+    # See below.
 function(obj)
 {
    tmp = lapply(obj, function(x)
@@ -171,10 +196,44 @@ function(doc, root = getRoot(doc), trailer = getTrailer(doc))
         if(length(tmp) == 0)
             break
 #cat("getting ", paste(tmp, collapse = ", "), "\n")
-        tmp = mapply(function(id, idx) assign(id, .Call("R_getObjectByID", doc@ref, idx), e),
+        tmp = mapply(function(id, idx) assign(id, .Call("R_getObjectByID", doc@ref, idx, FALSE, FALSE), e),
                      tmp,
                      lapply(strsplit(tmp, ".", fixed = TRUE), as.integer), SIMPLIFY = FALSE)
     }
 
+    e = as.list(e)
+    o = order(as.integer(gsub("\\.0", "", names(e))))
+    e = e[o]
+    class(e) = "PDFDictionaries"    
     e
+}
+
+setOldClass(c("PDFDictionaries", "list"))
+
+# setMethod("[[", c("PDFDictionaries", "character"),
+#          function(x, i, ...) {
+#              if(!(i %in% names(x)))
+#                  
+#          })
+
+
+
+getFilename =
+function(doc)
+{
+  .Call("R_qpdf_getFilename", as(doc, "QPDF"))
+}
+
+setMethod("show", "QPDF",
+function(object)
+ cat("<QPDF>", getFilename(object), "\n")
+)
+
+    
+
+
+writePDF =
+function(pdf, file)
+{
+    .Call("R_QPDFWriter_toFile", as(pdf, "QPDF"), path.expand(file))
 }

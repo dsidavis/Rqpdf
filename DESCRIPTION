@@ -1,6 +1,6 @@
 Package: Rqpdf
 Version: 0.1-0
-Title: Illustrates interface to libqpdf
-Description: Shows autoconf and pkg-config.
+Title: Access elements of PDF documents.
+Description: This uses libqpdf to access elements of PDF documents, including forms.
 Author: DTL <duncan@r-project.org>
 Maintainer:  DTL <duncan@r-project.org>

@@ -17,3 +17,4 @@ function(doc)
     doc = as(doc, "QPDF")
     doc[[ getRoot(doc)$Pages ]]$Count
 }
+
