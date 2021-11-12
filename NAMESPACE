@@ -1,3 +1,14 @@
 useDynLib(Rqpdf)
 exportPattern(".*")
 
+export("[[")
+exportMethods("[[")
+
+exportMethods("show")
+
+exportMethods("names", "$<-")
+exportMethods("coerce")
+
+#S3method(print, QPDF)
+
+

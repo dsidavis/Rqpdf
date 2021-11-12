@@ -36,11 +36,13 @@ R_getFormValues(SEXP r_filename)
                       annot_iter != annotations.end(); ++annot_iter, annotCtr++)
             {
                 QPDFFormFieldObjectHelper ffh = afdh.getFieldForAnnotation(*annot_iter);
+#if 0                    
                 if(ffh.getFieldType() == "/Ch") {
                     Rprintf("got a /Ch.");
                     Rf_PrintValue(QPDFObjectHandleToR(annot_iter->getObjectHandle().getKey("/Opt")));
-                }                
-                SET_STRING_ELT(names, annotCtr, mkChar(ffh.getMappingName().c_str()));
+                }
+#endif                
+                SET_STRING_ELT(names, annotCtr, mkChar(ffh.getFullyQualifiedName().c_str()));
                 SET_VECTOR_ELT(el, annotCtr, FieldObjHelperToR(ffh));
             }
             SET_NAMES(el, names);
@@ -63,6 +65,7 @@ convertQPDFArrayToR(QPDFObjectHandle h, bool streamData = false, bool asRectangl
         REAL(ans)[2] = r.urx;
         REAL(ans)[3] = r.ury;
         SET_CLASS(ans, ScalarString(mkChar("Rectangle")));
+        UNPROTECT(1);
         return(ans);
     }
     
@@ -183,7 +186,7 @@ FieldObjHelperToR(QPDFFormFieldObjectHelper ffh)
 
     // isNull, getFieldType(), getMappingName(), getValue(), getDefaultValue()
     SEXP ans, names;
-    int numFields = 5, field = 0;
+    int numFields = 7, field = 0;
     PROTECT(ans = NEW_LIST(numFields));
     PROTECT(names = NEW_CHARACTER(numFields));
 
@@ -210,7 +213,13 @@ FieldObjHelperToR(QPDFFormFieldObjectHelper ffh)
     SET_STRING_ELT(names, field++, mkChar("defaultValue"));    
 
     SET_VECTOR_ELT(ans, field, ScalarString(mkChar(ffh.getValue().getTypeName())));
-    SET_STRING_ELT(names, field++, mkChar("valueType"));                    
+    SET_STRING_ELT(names, field++, mkChar("valueType"));
+
+    SET_VECTOR_ELT(ans, field, ScalarString(mkChar(ffh.getFullyQualifiedName().c_str())));
+    SET_STRING_ELT(names, field++, mkChar("qualifiedName"));
+
+    SET_VECTOR_ELT(ans, field, ScalarString(mkChar(ffh.getPartialName().c_str())));
+    SET_STRING_ELT(names, field++, mkChar("partialName"));                            
 
 
     SET_NAMES(ans, names);

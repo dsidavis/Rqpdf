@@ -161,12 +161,18 @@ R_qpdf_dictKeys(QPDFObjectHandle h)
 
 extern "C"
 SEXP
-R_getObjectByID(SEXP r_qpdf, SEXP id, SEXP streamData)
+R_getObjectByID(SEXP r_qpdf, SEXP id, SEXP streamData, SEXP asRef)
 {
     QPDF *qpdf = GET_QPDF(r_qpdf);
     QPDFObjectHandle o;
     o = qpdf->getObjectByID(INTEGER(id)[0], INTEGER(id)[1]);
-    return(QPDFObjectHandleToR(o, true, true, LOGICAL(streamData)[0]));
+    if(asLogical(asRef)) {
+        QPDFObjectHandle *r;
+        r = new QPDFObjectHandle(o);
+        //XXX  Need to put a finalizer on it.
+        return(R_MakeExternalPtr(r, Rf_install("QPDFObjectHandle"), R_NilValue));
+    } else
+        return(QPDFObjectHandleToR(o, true, true, LOGICAL(streamData)[0]));
 }
 
 QPDF *
