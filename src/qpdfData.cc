@@ -1,5 +1,6 @@
 #include <qpdf/qpdf-c.h>
-#include <Rdefines.h>
+//#include <Rdefines.h>
+#include "Rqpdf.h"
 
 // external pointer for qpdf_data object
 
