@@ -1,5 +1,31 @@
 useDynLib(Rqpdf)
-exportPattern(".*")
+#exportPattern(".*")
+
+export(qpdf,
+       getFormValues,
+       getAllDicts)
+
+export(getRoot, getTrailer)
+
+export(version, libqpdfVersion)
+
+export(pdfVersion,
+       numPages,
+       getFilename,
+       getPages,
+       getImages,
+       getAnnots)
+
+# pdfInfo,
+
+# getWarnings
+# showWarnings
+# suppressWarnings
+
+#export(writePDF)
+
+# getByType
+# getTypeName
 
 export("[[")
 exportMethods("[[")
