@@ -15,7 +15,10 @@ function(pdf, asDataFrame = TRUE, combinePages = TRUE)
 
     z = .Call("R_getFormValues", pdf)
     if(!asDataFrame)
-        return(z)
+        return(z) #
+
+    if(all(sapply(z, length) == 0))
+        return(NULL)
 
     if(combinePages) {
         formValuesToDF(unlist(z, recursive = FALSE), rep(seq(along = z), sapply(z, length)))
@@ -29,9 +32,11 @@ function(z, page = NA)
     vars = names(z[[1]])
     tmp = lapply(vars, function(id) sapply(z, `[[`, id))
     names(tmp) = vars
-    i = match("defaultValue", vars)
-    d = as.data.frame(tmp[-i], stringsAsFactors = FALSE)
-    d$defaultValue = I(tmp[[i]])
+    i = sapply(tmp, is.list)
+#    i = match("defaultValue", vars)
+    d = as.data.frame(tmp[!i], stringsAsFactors = FALSE)
+    d[names(tmp)[i]] = lapply(tmp[i], I)
+#    d$defaultValue = I(tmp[[i]])
     d$page = page
     d
 }
