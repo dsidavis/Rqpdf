@@ -7,10 +7,27 @@ if test -z "$PKG_CONFIG" ; then
   exit 1
 fi
 
+
 AC_SUBST(PKG_CONFIG)
+
+CXX=`R CMD config CXX`
 
 QPDF_VERSION=`${PKG_CONFIG} --modversion libqpdf`
 echo "QPDF Version = $QPDF_VERSION"
 AC_SUBST(QPDF_VERSION)
 
-AC_OUTPUT(src/Makevars R/version.R)
+CFLAGS=`${PKG_CONFIG} --cflags libqpdf`
+AC_COMPILE_IFELSE(
+[
+#include <qpdf/QPDF.hh>
+  QPDFObject::ot_boolean;
+]
+[echo "use QPDFObject prefix for enum types"; PKG_DEFINES="-DUSE_QPDFOBJECT_NS=1"]
+[echo "use toplevel namespace for enum types"; ]
+)
+
+AC_SUBST(PKG_DEFINES)
+
+AC_CONFIG_FILES(src/Makevars R/version.R)
+
+AC_OUTPUT()
