@@ -50,6 +50,7 @@ R_getFormValues(SEXP r_filename)
         }
 
         UNPROTECT(1);
+        qpdf.closeInputSource();
         return(ans);
 }
 
@@ -115,6 +116,7 @@ mkPDFIdGenRobj(QPDFObjectHandle h)
             return(ans);
 }
 
+
 SEXP
 QPDFObjectHandleToR(QPDFObjectHandle h, bool followGen, bool stripSlash, bool streamData)
 {
@@ -123,31 +125,31 @@ QPDFObjectHandleToR(QPDFObjectHandle h, bool followGen, bool stripSlash, bool st
     SEXP ans = R_NilValue;
     switch(h.getTypeCode()) {
 
-    case QPDFObject::ot_boolean:
+    case QPDFTypeEnum(ot_boolean):
         ans = ScalarLogical(h.getBoolValue());
         break;
-    case QPDFObject::ot_integer:
+    case QPDFTypeEnum(ot_integer):
         ans = ScalarInteger(h.getIntValue());
         break;
-    case QPDFObject::ot_real:
+    case QPDFTypeEnum(ot_real):
         ans = ScalarReal(h.getNumericValue());
         break;
-    case QPDFObject::ot_string:
+    case QPDFTypeEnum(ot_string):
         ans = ScalarString(mkChar(h.getStringValue().c_str()));
         break;
-    case QPDFObject::ot_name:
+    case QPDFTypeEnum(ot_name):
         ans = ScalarString(mkChar(h.getName().c_str()));
         break;
-    case QPDFObject::ot_array:
+    case QPDFTypeEnum(ot_array):
         ans = convertQPDFArrayToR(h, streamData);
         break;
-    case QPDFObject::ot_dictionary:
+    case QPDFTypeEnum(ot_dictionary):
         if(!followGen && isOID)   // do we want to do this generally for all types of objects.
             ans = mkPDFIdGenRobj(h);
         else
             ans = convertQPDFDictToR(h, followGen, stripSlash, streamData);
         break;
-    case QPDFObject::ot_stream:
+    case QPDFTypeEnum(ot_stream):
         if(streamData) {
             PointerHolder<Buffer> d = h.getStreamData();
             size_t sz = d->getSize();
@@ -161,12 +163,12 @@ QPDFObjectHandleToR(QPDFObjectHandle h, bool followGen, bool stripSlash, bool st
         
         UNPROTECT(1);
         break;
-    case QPDFObject::ot_operator:
+    case QPDFTypeEnum(ot_operator):
         PROTECT(ans = ScalarString(mkChar(h.getOperatorValue().c_str())));        
         SET_NAMES(ans, ScalarString(mkChar(h.getTypeName())));
         UNPROTECT(1);
         break;        
-    case QPDFObject::ot_inlineimage:
+    case QPDFTypeEnum(ot_inlineimage):
         PROTECT(ans = ScalarString(mkChar(h.getInlineImageValue().c_str())));        
         SET_NAMES(ans, ScalarString(mkChar(h.getTypeName())));
         UNPROTECT(1);

@@ -136,7 +136,7 @@ SEXP
 R_QPDFObjectHandle_getKeys(SEXP r_obj)
 {
     QPDFObjectHandle *p = (QPDFObjectHandle *) R_ExternalPtrAddr(r_obj);
-    if(p->getTypeCode() != QPDFObject::ot_dictionary) {
+    if(p->getTypeCode() != QPDFTypeEnum(ot_dictionary)) { // QPDFObject::ot_dictionary
         PROBLEM "QPDF reference is not a dictionary, but a %s", p->getTypeName()
             ERROR;
     }
