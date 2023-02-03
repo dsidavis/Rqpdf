@@ -1,5 +1,5 @@
 
-
+if(FALSE) {
 numPages =
 function(file)    
 {
@@ -8,6 +8,7 @@ function(file)
         stop(file, " does not exist")
     
     .Call("R_pdf_numPages", file)
+}
 }
 
 
