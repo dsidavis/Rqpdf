@@ -77,8 +77,9 @@ extern "C"
 SEXP
 R_qpdf_getFilename(SEXP r_qpdf)
 {
-    QPDF *qpdf = GET_QPDF(r_qpdf);        
-    const char * str = qpdf->getFilename().c_str();
+    QPDF *qpdf = GET_QPDF(r_qpdf);
+    std::string sstr = qpdf->getFilename();
+    const char * str = sstr.c_str();
     return(ScalarString(str ? mkChar(str) : R_NaString));
 }
 
