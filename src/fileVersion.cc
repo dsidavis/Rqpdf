@@ -1,8 +1,9 @@
 #include <qpdf/qpdf-c.h>
-#include <Rdefines.h>
+#include "Rqpdf.h"
 
 // Get the PDF version of the given file
 
+extern "C"
 SEXP
 R_get_pdf_version(SEXP r_filename)
 {
