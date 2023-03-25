@@ -208,7 +208,7 @@ FieldObjHelperToR(QPDFFormFieldObjectHelper ffh)
     SET_VECTOR_ELT(ans, field, ScalarString(mkChar(ffh.getMappingName().c_str())));
     SET_STRING_ELT(names, field++, mkChar("name"));
 
-    SET_VECTOR_ELT(ans, field, QPDFObjectHandleToR(ffh.getValue())); // XX add streamData - ever needed?
+    SET_VECTOR_ELT(ans, field, QPDFObjectHandleToR(ffh.getValue(), true)); // XX add streamData - ever needed?
     SET_STRING_ELT(names, field++, mkChar("value"));
 
     SET_VECTOR_ELT(ans, field, QPDFObjectHandleToR(ffh.getDefaultValue()));
