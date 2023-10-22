@@ -16,7 +16,7 @@ function(doc, parse = TRUE)
         if(parse)
             XML::xmlParse(x)
         else
-            x
+            structure(x, dictionary = attr(s, "dict"))
     } else
         s
 }

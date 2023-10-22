@@ -36,6 +36,12 @@ Duncan Temple Lang
  \code{\link{qpdf}}, \code{\link{getRoot}}, \code{\link{getTrailer}}
 }
 \examples{
+  pdf = system.file("sampleDocs/europeanPatentForm.pdf", package = "Rqpdf")
+
+  xml = getMetadata(pdf)
+  txt = getMetadata(pdf, parse = FALSE)
+
+  info = getInfo(pdf)
 }
 \keyword{input}
 \concept{PDF}
