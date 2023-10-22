@@ -6,12 +6,16 @@ setClass("QPDFDict", contains = "QPDFObject")
 setClass("QPDFArray", contains = "QPDFObject")
 setClass("QPDFStream", contains = "QPDFObject")
 
-qpdf = function(filename = character(), obj = new("QPDF"))
+qpdf =
+function(filename = character(), obj = new("QPDF"), check = TRUE)
 {
     filename = path.expand(filename)
     if(length(filename) && !file.exists(filename))
         stop(filename, " does not exist as a file")
 
+    if(check && file.info(filename)$size == 0)
+        stop(filename, " is an empty file")
+        
     qpdf = .Call("R_getQPDF", filename)
     obj@ref = qpdf
     obj
@@ -33,11 +37,9 @@ setMethod("[[", c("QPDF", "QPDFReference"),
           })
 
 
-
-
-
 setMethod("[[", c("QPDF", "character"),
           function(x, i, streamData = FALSE, asRef = FALSE, ...) {
+              # Why . rather than space ?
               i = strsplit(i, "\\.")[[1]]
               i = as.integer(i)
               if(length(i) != 2 || any(is.na(i)))
@@ -113,6 +115,7 @@ function(doc, val = TRUE)
 
 
 # See below for alternative version
+if(FALSE)
 getAllDicts =
 function(doc, root = getRoot(doc), trailer = getTrailer(doc))
 {
@@ -191,11 +194,11 @@ function(doc, root = getRoot(doc), trailer = getTrailer(doc))
     e = new.env( parent = emptyenv())
     while(TRUE) {
         tmp = findQPDFReferences(tmp)
-#browser()        
+
         tmp = tmp[ !(tmp %in% ls(e)) ]
         if(length(tmp) == 0)
             break
-#cat("getting ", paste(tmp, collapse = ", "), "\n")
+
         tmp = mapply(function(id, idx) assign(id, .Call("R_getObjectByID", doc@ref, idx, FALSE, FALSE), e),
                      tmp,
                      lapply(strsplit(tmp, ".", fixed = TRUE), as.integer), SIMPLIFY = FALSE)
@@ -209,6 +212,14 @@ function(doc, root = getRoot(doc), trailer = getTrailer(doc))
 }
 
 setOldClass(c("PDFDictionaries", "list"))
+
+setMethod("[[", c("PDFDictionaries", "QPDFReference"),
+          function(x, i, ...) {
+              browser()
+              x[[ paste(i, collapse = ".") ]]
+                  
+          })
+
 
 # setMethod("[[", c("PDFDictionaries", "character"),
 #          function(x, i, ...) {
