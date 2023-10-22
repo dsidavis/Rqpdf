@@ -13,6 +13,9 @@ function(pdf, asDataFrame = TRUE, combinePages = TRUE)
     if(!file.exists(pdf))
         stop(pdf, " doesn't exist")
 
+    if(file.info(pdf)$size == 0)
+        stop(pdf, " is empty")
+
     z = .Call("R_getFormValues", pdf)
     if(!asDataFrame)
         return(z) #
