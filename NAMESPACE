@@ -38,3 +38,6 @@ exportMethods("coerce")
 #S3method(print, QPDF)
 
 
+export(getMetadata, getInfo)
+
+
