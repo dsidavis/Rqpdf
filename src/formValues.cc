@@ -156,6 +156,7 @@ QPDFObjectHandleToR(QPDFObjectHandle h, bool followGen, bool stripSlash, bool st
             PROTECT(ans = Rf_allocVector(RAWSXP, sz));
             memcpy(RAW(ans), d->getBuffer(), sz);
             SET_CLASS(ans, ScalarString(mkChar("PDFStream")));
+            SET_ATTR(ans, Rf_install("dictionary"), convertQPDFDictToR(h.getDict(), followGen, stripSlash, false));
         } else {
             PROTECT(ans = ScalarString(mkChar(h.unparse().c_str())));
             SET_NAMES(ans, ScalarString(mkChar(h.getTypeName())));

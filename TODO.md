@@ -11,3 +11,20 @@
   dicts[[ start$Names ]] 
 ```
 
+
+# Done
+
++ √ For a stream, get the associated dictionary contents too, e.g., as an attribute
+   + e.g. for the Metadata element in 
+```
+4 0 obj
+<<
+  /Subtype /XML
+  /Type /Metadata
+  /Length 5 0 R
+>>
+stream
+<?xpacket begin="" id="W5M0MpCehiHzreSzNTczkc9d"?>
+<x:xmpmeta xmlns:x="adobe:ns:meta/">....
+```
+   + Added as an attribute named "dictionary" to the stream data.
