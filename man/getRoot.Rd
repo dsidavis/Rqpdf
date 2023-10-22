@@ -45,11 +45,6 @@ Duncan Temple Lang <duncan@r-project.org>
 
   identical(doc[[end$Root]], start)
 }
-% Add one or more standard keywords, see file 'KEYWORDS' in the
-% R documentation directory (show via RShowDoc("KEYWORDS")):
 \keyword{input}
-% \keyword{ ~kwd2 }
-% Use only one keyword per line.
-% For non-standard keywords, use \concept instead of \keyword:
 \concept{PDF}
 
