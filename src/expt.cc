@@ -213,3 +213,21 @@ R_get_QPDF(SEXP r_qpdf)
     QPDF *q = (QPDF*) R_ExternalPtrAddr(r_qpdf);
     return(q);
 }
+
+
+extern "C"
+SEXP
+R_getAllObjects(SEXP r_qpdf, SEXP r_streamData)
+{
+   QPDF *qpdf = GET_QPDF(r_qpdf);    
+   std::vector<QPDFObjectHandle> els = qpdf->getAllObjects();
+   SEXP ans;
+   PROTECT(ans = NEW_LIST(els.size()));
+   for(int i = 0; i < els.size(); i++) {
+       QPDFObjectHandle h = els[i];
+       SET_VECTOR_ELT(ans, i, QPDFObjectHandleToR(h, true, true, LOGICAL(r_streamData)[0]));
+   }
+   // names on elements.
+   UNPROTECT(1);
+   return(ans);
+}
