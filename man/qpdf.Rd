@@ -10,7 +10,7 @@
 \alias{coerce,character,QPDF-method}
 
 \title{
-Create a handle/reference to a PDF document
+Create a handle/reference to a PDF document either from a file or from an in-memory PDF document.
 }
 \description{
   This creates a reference to a PDF document  that we can use
@@ -19,12 +19,17 @@ Create a handle/reference to a PDF document
   This  does not  immediately read the PDF document.
 }
 \usage{
-qpdf(filename = character(), obj = new("QPDF"))
+qpdf(filename = character(), obj = new("QPDF"), check = TRUE, description = filename)
 getFilename(doc)
 }
 \arguments{
-  \item{filename}{the path to the PDF file.}
-  \item{obj}{}
+  \item{filename}{either the path to the PDF file or a \code{raw} vector providing the
+     contents of the PDF document in memory.}
+   \item{obj}{a \code{QPDF} object from a previous call to \code{qpdf}}
+   \item{check}{a logical value controlling whether we check if the file has any content before
+     attempting to process/parse its content as PDF.}
+   \item{description}{a character vector of length 1 providing a description/label for the
+    PDF document when \code{filename} is a \code{raw} vector and there is no actual file for the PDF.}
   \item{doc}{a \code{QPDF} object created via \code{qpdf}}
 }
 

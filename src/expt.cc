@@ -56,16 +56,27 @@ R_freeQPDF(SEXP v)
 
 extern "C"
 SEXP
-R_getQPDF(SEXP r_filename)
+R_getQPDF(SEXP r_filename, SEXP r_description, SEXP r_passwd)
 {
     QPDF *qpdf;
     qpdf = new QPDF();
+    
     if(Rf_length(r_filename)) {
         try {
-            qpdf->processFile(CHAR(STRING_ELT(r_filename, 0)));
+            if(TYPEOF(r_filename) == STRSXP)
+                qpdf->processFile(CHAR(STRING_ELT(r_filename, 0)));
+            else if(TYPEOF(r_filename) == RAWSXP) {
+                char const *buf = (char const *) RAW(r_filename);
+                qpdf->processMemoryFile(CHAR(STRING_ELT(r_description, 0)), buf, Rf_length(r_filename), NULL);                
+            } else {
+                PROBLEM "wrong argument type for r_filename in R_getQPDF"
+                    ERROR;
+            }
+            
         } catch(std::exception &e) {
-            PROBLEM "failed in processFile() for PDF document '%s'", CHAR(STRING_ELT(r_filename, 0))
-                ERROR
+            PROBLEM "failed in processFile() for PDF document '%s'",
+                (TYPEOF(r_filename) == STRSXP) ? CHAR(STRING_ELT(r_filename, 0)) :  CHAR(STRING_ELT(r_description, 0))
+            ERROR
         }
     }
     

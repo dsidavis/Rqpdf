@@ -1,3 +1,4 @@
+
 + Allow creation of a new dict/pdf object and insert into document
   + e.g. for adding validation code for a widget.
     + Add an AA element to a widget's dictionary and have its /V element refer to a new PDF object.
@@ -13,6 +14,7 @@
 
 
 # Done
++ √ Read a PDF document from a raw buffer so don't have to save to drive.
 
 + √ For a stream, get the associated dictionary contents too, e.g., as an attribute
    + e.g. for the Metadata element in 

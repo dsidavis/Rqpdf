@@ -7,16 +7,20 @@ setClass("QPDFArray", contains = "QPDFObject")
 setClass("QPDFStream", contains = "QPDFObject")
 
 qpdf =
-function(filename = character(), obj = new("QPDF"), check = TRUE)
+function(filename = character(), obj = new("QPDF"), check = TRUE, description = filename)
 {
-    filename = path.expand(filename)
-    if(length(filename) && !file.exists(filename))
-        stop(filename, " does not exist as a file")
+    if(is.raw(filename)) {
 
-    if(check && file.info(filename)$size == 0)
-        stop(filename, " is an empty file")
-        
-    qpdf = .Call("R_getQPDF", filename)
+    } else {
+        filename = path.expand(filename)
+        if(length(filename) && !file.exists(filename))
+            stop(filename, " does not exist as a file")
+
+        if(check && file.info(filename)$size == 0)
+            stop(filename, " is an empty file")
+    }
+    
+    qpdf = .Call("R_getQPDF", filename, as.character(description), NULL)
     obj@ref = qpdf
     obj
 }
