@@ -15,16 +15,6 @@ R_getRoot(SEXP r_filename)
 
 extern "C"
 SEXP
-R_getRoot_QPDF(SEXP r_qpdf, SEXP r_root, SEXP streamData)
-{
-   QPDF *qpdf = GET_QPDF(r_qpdf);    
-   QPDFObjectHandle r = LOGICAL(r_root)[0] ? qpdf->getRoot() : qpdf->getTrailer();
-   return(QPDFObjectHandleToR(r, true, true, LOGICAL(streamData)[0]));
-}
-
-
-extern "C"
-SEXP
 R_getTrailer(SEXP r_filename)
 {
    QPDF qpdf;
@@ -32,6 +22,29 @@ R_getTrailer(SEXP r_filename)
    QPDFObjectHandle r = qpdf.getTrailer();
    return(QPDFObjectHandleToR(r, false));
 }
+
+
+extern "C"
+SEXP
+R_getRoot_QPDF(SEXP r_qpdf, SEXP r_root, SEXP streamData)
+{
+   QPDF *qpdf = GET_QPDF(r_qpdf);    
+   QPDFObjectHandle r;
+/*¿
+     SEXP cont = PROTECT(R_MakeUnwindCont());
+     and use R_ContinueUnwind(cont); in the catch()?
+*/
+   try {
+       r = LOGICAL(r_root)[0] ? qpdf->getRoot() : qpdf->getTrailer();
+   } catch (std::exception &ex) {
+        PROBLEM "failed to get %s in PDF document '%s'", LOGICAL(r_root)[0] ? "root" : "trailer",
+                                                             qpdf->getFilename().c_str()
+           ERROR ;
+   }
+   
+   return(QPDFObjectHandleToR(r, true, true, LOGICAL(streamData)[0]));
+}
+
 
 void
 R_freeQPDF(SEXP v)
@@ -47,9 +60,15 @@ R_getQPDF(SEXP r_filename)
 {
     QPDF *qpdf;
     qpdf = new QPDF();
-    if(Rf_length(r_filename))
-        qpdf->processFile(CHAR(STRING_ELT(r_filename, 0)));
-
+    if(Rf_length(r_filename)) {
+        try {
+            qpdf->processFile(CHAR(STRING_ELT(r_filename, 0)));
+        } catch(std::exception &e) {
+            PROBLEM "failed in processFile() for PDF document '%s'", CHAR(STRING_ELT(r_filename, 0))
+                ERROR
+        }
+    }
+    
     SEXP ans;
     ans = R_MakeExternalPtr(qpdf, Rf_install("QPDF"), R_NilValue);
     PROTECT(ans);
@@ -67,8 +86,13 @@ R_qpdf_processFile(SEXP r_qpdf, SEXP r_filename, SEXP r_password)
     const char *passwd = NULL;
     if(Rf_length(r_password))
         passwd = CHAR(STRING_ELT(r_password, 0));
-    
-    qpdf->processFile(CHAR(STRING_ELT(r_filename, 0)), passwd);
+
+    try {
+        qpdf->processFile(CHAR(STRING_ELT(r_filename, 0)), passwd);
+    } catch(std::exception &e) {
+        PROBLEM "failed in processFile() for PDF document '%s'", CHAR(STRING_ELT(r_filename, 0))
+            ERROR
+    }
     return(R_NilValue);
 }
 
