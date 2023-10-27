@@ -1,5 +1,5 @@
 Package: Rqpdf
-Version: 0.1-0
+Version: 0.2-0
 Title: Access elements of PDF documents.
 Description: This uses libqpdf to access elements of PDF documents, including forms.
 Author: DTL <duncan@r-project.org>
