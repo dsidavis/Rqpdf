@@ -151,7 +151,18 @@ QPDFObjectHandleToR(QPDFObjectHandle h, bool followGen, bool stripSlash, bool st
         break;
     case QPDFTypeEnum(ot_stream):
         if(streamData) {
-            PointerHolder<Buffer> d = h.getStreamData();
+            PointerHolder<Buffer> d;
+            try {
+                d = h.getStreamData();
+            } catch(std::exception &ex) {
+                PROBLEM "failed to get stream data - returning reference to stream"
+                    WARN;
+                PROTECT(ans = ScalarString(mkChar(h.unparse().c_str())));
+                SET_NAMES(ans, ScalarString(mkChar(h.getTypeName())));
+                UNPROTECT(1);
+                return(ans);
+            }
+            
             size_t sz = d->getSize();
             PROTECT(ans = Rf_allocVector(RAWSXP, sz));
             memcpy(RAW(ans), d->getBuffer(), sz);
