@@ -3,7 +3,8 @@ useDynLib(Rqpdf)
 
 export(qpdf,
        getFormValues,
-       getAllDicts)
+       getAllDicts,
+       getAllObjects)
 
 export(getRoot, getTrailer)
 

@@ -221,6 +221,14 @@ setMethod("[[", c("PDFDictionaries", "QPDFReference"),
           })
 
 
+getAllObjects =
+function(doc, streamData = TRUE)
+{
+    doc = as(doc, "QPDF")
+    .Call("R_getAllObjects", doc, as.logical(streamData))
+}
+
+
 # setMethod("[[", c("PDFDictionaries", "character"),
 #          function(x, i, ...) {
 #              if(!(i %in% names(x)))
