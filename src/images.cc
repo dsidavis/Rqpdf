@@ -1,5 +1,4 @@
 #include "Rqpdf.h"
-#include <qpdf/PointerHolder.hh>
 
 extern "C"
 SEXP
