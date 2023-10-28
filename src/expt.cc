@@ -1,8 +1,5 @@
 #include "Rqpdf.h"
 
-QPDF *R_get_QPDF(SEXP r_qpdf);
-#define GET_QPDF(x) (QPDF *) R_get_QPDF((x))
-
 extern "C"
 SEXP
 R_getRoot(SEXP r_filename)

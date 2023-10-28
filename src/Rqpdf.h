@@ -14,6 +14,7 @@ SEXP convertQPDFDictToR(QPDFObjectHandle h, bool followGen = false, bool stripSl
 SEXP R_qpdf_dictKeys(QPDFObjectHandle h);
 
 QPDF *R_get_QPDF(SEXP);
+#define GET_QPDF(x) (QPDF *) R_get_QPDF((x))
 
 
 // make conditional
