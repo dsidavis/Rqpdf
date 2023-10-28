@@ -55,7 +55,7 @@ R_getImages(SEXP r_qpdf)
                  SET_VECTOR_ELT(els, numImages++, raw);
                  UNPROTECT(1);
             }
-            SET_NAMES(ans, names);
+            SET_NAMES(els, names);
             SET_VECTOR_ELT(ans, page_ctr, els);            
             UNPROTECT(2);
         }
