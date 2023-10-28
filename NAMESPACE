@@ -42,3 +42,5 @@ exportMethods("coerce")
 export(getMetadata, getInfo)
 
 
+
+export(getImages)
