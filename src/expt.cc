@@ -1,5 +1,27 @@
 #include "Rqpdf.h"
 
+
+void suppressPDFWarnings(QPDF *qpdf)
+{
+    qpdf->setSuppressWarnings(true);
+}
+
+void showPDFWarnings(QPDF *qpdf)
+{
+    qpdf->setSuppressWarnings(false);
+    if(qpdf->anyWarnings()) {
+        std::vector<QPDFExc> warnings = qpdf->getWarnings();
+        for(size_t i = 0; i < warnings.size(); i++) {
+            QPDFExc w = warnings[i];
+            PROBLEM "%s", w.getMessageDetail().c_str()
+                WARN;
+        }
+    }
+}
+
+
+
+
 extern "C"
 SEXP
 R_getRoot(SEXP r_filename)
@@ -59,7 +81,10 @@ R_getQPDF(SEXP r_filename, SEXP r_description, SEXP r_passwd)
     qpdf = new QPDF();
     
     if(Rf_length(r_filename)) {
+            
+        qpdf->setSuppressWarnings(true);                    
         try {
+
             if(TYPEOF(r_filename) == STRSXP)
                 qpdf->processFile(CHAR(STRING_ELT(r_filename, 0)));
             else if(TYPEOF(r_filename) == RAWSXP) {
@@ -71,10 +96,14 @@ R_getQPDF(SEXP r_filename, SEXP r_description, SEXP r_passwd)
             }
             
         } catch(std::exception &e) {
+            showPDFWarnings(qpdf);      
             PROBLEM "failed in processFile() for PDF document '%s'",
                 (TYPEOF(r_filename) == STRSXP) ? CHAR(STRING_ELT(r_filename, 0)) :  CHAR(STRING_ELT(r_description, 0))
             ERROR
         }
+
+        // use a finally  to avoid duplicating this call.
+        showPDFWarnings(qpdf);              
     }
     
     SEXP ans;
@@ -227,14 +256,19 @@ extern "C"
 SEXP
 R_getAllObjects(SEXP r_qpdf, SEXP r_streamData)
 {
-   QPDF *qpdf = GET_QPDF(r_qpdf);    
+   QPDF *qpdf = GET_QPDF(r_qpdf);
+
+   qpdf->setSuppressWarnings(true);
    std::vector<QPDFObjectHandle> els = qpdf->getAllObjects();
+   
    SEXP ans;
    PROTECT(ans = NEW_LIST(els.size()));
    for(int i = 0; i < els.size(); i++) {
        QPDFObjectHandle h = els[i];
        SET_VECTOR_ELT(ans, i, QPDFObjectHandleToR(h, true, true, LOGICAL(r_streamData)[0]));
    }
+
+   showPDFWarnings(qpdf);      
    // names on elements.
    UNPROTECT(1);
    return(ans);
