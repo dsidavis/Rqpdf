@@ -31,7 +31,7 @@ R_getImages(SEXP r_qpdf)
                  std::shared_ptr<Buffer> data;
                  bool isRaw = false;
                  try {
-                     data = img.getStreamData();
+                     data = img.getStreamData();  // getStreamData();
                  } catch(std::exception &ex) {
                      data = img.getRawStreamData();
                      isRaw = true;
@@ -46,11 +46,12 @@ R_getImages(SEXP r_qpdf)
                  SET_ATTR(raw, Rf_install("dictionary"), QPDFObjectHandleToR(img.getDict(), true, true, false));
 
                  // Is this correct?
-                 if(img.isInlineImage()) {
-                     std::string nm = img.getInlineImageValue();
-                     if(nm.c_str())
-                         SET_STRING_ELT(names, numImages, mkChar(nm.c_str()));
-                 }
+//                 if(img.isInlineImage()) {
+//                     std::string nm = img.getInlineImageValue();d
+                 std::string nm;
+                 if(img.getValueAsName(nm))
+                   SET_STRING_ELT(names, numImages, mkChar(nm.c_str()));
+//                 }
                  
                  SET_VECTOR_ELT(els, numImages++, raw);
                  UNPROTECT(1);
