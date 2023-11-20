@@ -20,7 +20,7 @@ function(filename = character(), obj = new("QPDF"), check = TRUE, description = 
             stop(filename, " is an empty file")
     }
     
-    qpdf = .Call("R_getQPDF", filename, as.character(description), NULL)
+    qpdf = base::.Call("R_getQPDF", filename, as.character(description), NULL)
     obj@ref = qpdf
     obj
 }
@@ -81,7 +81,7 @@ getWarnings =
 function(doc)
 {
     doc = as(doc, "QPDF")
-    .Call("R_qpdf_getWarnings", doc@ref)
+    base::.Call("R_qpdf_getWarnings", doc@ref)
 }
 
 processFile =
@@ -114,7 +114,7 @@ suppressWarnings =
 function(doc, val = TRUE)
 {
     doc = as(doc, "QPDF")
-    .Call("R_qpdf_setSuppressWarnings", doc@ref, as.logical(val))
+    base::.Call("R_qpdf_setSuppressWarnings", doc@ref, as.logical(val))
 }
 
 
@@ -196,6 +196,13 @@ function(doc, root = getRoot(doc), trailer = getTrailer(doc))
     doc = as(doc, "QPDF")
     tmp = c(root, trailer)
     e = new.env( parent = emptyenv())
+
+#  suppressWarnings(doc, TRUE)
+#  on.exit({
+#      suppressWarnings(doc, FALSE)
+#      showWarnings(doc)
+#  })
+    
     while(TRUE) {
         tmp = findQPDFReferences(tmp)
 
@@ -203,7 +210,9 @@ function(doc, root = getRoot(doc), trailer = getTrailer(doc))
         if(length(tmp) == 0)
             break
 
-        tmp = mapply(function(id, idx) assign(id, .Call("R_getObjectByID", doc@ref, idx, FALSE, FALSE), e),
+        tmp = mapply(function(id, idx)
+            # assign(id, .Call("R_getObjectByID", doc@ref, idx, FALSE, FALSE), e),
+                         assign(id, .Call("R_getObjectByID", doc, idx, FALSE, FALSE), e),
                      tmp,
                      lapply(strsplit(tmp, ".", fixed = TRUE), as.integer), SIMPLIFY = FALSE)
     }
@@ -239,8 +248,6 @@ function(doc, streamData = TRUE)
 #                  
 #          })
 
-
-
 getFilename =
 function(doc)
 {
@@ -251,8 +258,6 @@ setMethod("show", "QPDF",
 function(object)
  cat("<QPDF>", getFilename(object), "\n")
 )
-
-    
 
 
 writePDF =
