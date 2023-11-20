@@ -1,13 +1,17 @@
 #include "Rqpdf.h"
 
+#define NATIVE_CATCH_QPDF_WARNINGS 1
 
 void suppressPDFWarnings(QPDF *qpdf)
 {
+#ifdef NATIVE_CATCH_QPDF_WARNINGS
     qpdf->setSuppressWarnings(true);
+#endif    
 }
 
 void showPDFWarnings(QPDF *qpdf)
 {
+#ifdef NATIVE_CATCH_QPDF_WARNINGS
     qpdf->setSuppressWarnings(false);
     if(qpdf->anyWarnings()) {
         std::vector<QPDFExc> warnings = qpdf->getWarnings();
@@ -17,18 +21,25 @@ void showPDFWarnings(QPDF *qpdf)
                 WARN;
         }
     }
+#endif    
 }
 
 
 
 
+/* Are these used?  If they are, they may have a problem as the QPDF will be
+   destroyed at the end of the routine and if the QPDFObjectHandleToR
+  returns any external pointers, they would be pointing to something that is destroyed.
+*/
 extern "C"
 SEXP
 R_getRoot(SEXP r_filename)
 {
    QPDF qpdf;
-   qpdf.processFile(CHAR(STRING_ELT(r_filename, 0)));
-   QPDFObjectHandle r = qpdf.getRoot();
+   suppressPDFWarnings(&qpdf);
+      qpdf.processFile(CHAR(STRING_ELT(r_filename, 0)));
+      QPDFObjectHandle r = qpdf.getRoot();
+   showPDFWarnings(&qpdf);
    return(QPDFObjectHandleToR(r, true));
 }
 
@@ -37,10 +48,13 @@ SEXP
 R_getTrailer(SEXP r_filename)
 {
    QPDF qpdf;
-   qpdf.processFile(CHAR(STRING_ELT(r_filename, 0)));
-   QPDFObjectHandle r = qpdf.getTrailer();
+   suppressPDFWarnings(&qpdf);
+     qpdf.processFile(CHAR(STRING_ELT(r_filename, 0)));
+     QPDFObjectHandle r = qpdf.getTrailer();
+   showPDFWarnings(&qpdf);      
    return(QPDFObjectHandleToR(r, false));
 }
+
 
 
 extern "C"
@@ -77,12 +91,12 @@ extern "C"
 SEXP
 R_getQPDF(SEXP r_filename, SEXP r_description, SEXP r_passwd)
 {
-    QPDF *qpdf;
-    qpdf = new QPDF();
-    
+    QPDF *qpdf;        
+    qpdf = new QPDF();    
+
     if(Rf_length(r_filename)) {
             
-        qpdf->setSuppressWarnings(true);                    
+        suppressPDFWarnings(qpdf);                    
         try {
 
             if(TYPEOF(r_filename) == STRSXP)
@@ -102,7 +116,6 @@ R_getQPDF(SEXP r_filename, SEXP r_description, SEXP r_passwd)
             ERROR
         }
 
-        // use a finally  to avoid duplicating this call.
         showPDFWarnings(qpdf);              
     }
     
@@ -258,7 +271,7 @@ R_getAllObjects(SEXP r_qpdf, SEXP r_streamData)
 {
    QPDF *qpdf = GET_QPDF(r_qpdf);
 
-   qpdf->setSuppressWarnings(true);
+   suppressPDFWarnings(qpdf);
    std::vector<QPDFObjectHandle> els = qpdf->getAllObjects();
    
    SEXP ans;
