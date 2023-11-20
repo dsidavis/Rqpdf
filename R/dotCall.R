@@ -1,7 +1,6 @@
 .Call =
 function(.NAME, ..., PACKAGE)    
 {
-print(.NAME)    
     # determine which arguments are QPDF objects and
     args = list(...)
     w = sapply(args, is, "QPDF")
