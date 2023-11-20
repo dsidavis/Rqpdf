@@ -1,4 +1,4 @@
-getImages =
+getImages2 =
 function(doc)
 {
     doc = as(doc, "QPDF")
