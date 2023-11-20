@@ -271,7 +271,6 @@ R_getAllObjects(SEXP r_qpdf, SEXP r_streamData)
 {
    QPDF *qpdf = GET_QPDF(r_qpdf);
 
-   suppressPDFWarnings(qpdf);
    std::vector<QPDFObjectHandle> els = qpdf->getAllObjects();
    
    SEXP ans;
@@ -281,7 +280,6 @@ R_getAllObjects(SEXP r_qpdf, SEXP r_streamData)
        SET_VECTOR_ELT(ans, i, QPDFObjectHandleToR(h, true, true, LOGICAL(r_streamData)[0]));
    }
 
-   showPDFWarnings(qpdf);      
    // names on elements.
    UNPROTECT(1);
    return(ans);
