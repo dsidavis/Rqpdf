@@ -197,12 +197,6 @@ function(doc, root = getRoot(doc), trailer = getTrailer(doc))
     tmp = c(root, trailer)
     e = new.env( parent = emptyenv())
 
-#  suppressWarnings(doc, TRUE)
-#  on.exit({
-#      suppressWarnings(doc, FALSE)
-#      showWarnings(doc)
-#  })
-    
     while(TRUE) {
         tmp = findQPDFReferences(tmp)
 
@@ -211,7 +205,6 @@ function(doc, root = getRoot(doc), trailer = getTrailer(doc))
             break
 
         tmp = mapply(function(id, idx)
-            # assign(id, .Call("R_getObjectByID", doc@ref, idx, FALSE, FALSE), e),
                          assign(id, .Call("R_getObjectByID", doc, idx, FALSE, FALSE), e),
                      tmp,
                      lapply(strsplit(tmp, ".", fixed = TRUE), as.integer), SIMPLIFY = FALSE)
