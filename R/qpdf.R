@@ -10,7 +10,8 @@ qpdf =
 function(filename = character(), obj = new("QPDF"), check = TRUE, description = filename)
 {
     if(is.raw(filename)) {
-
+        if(missing(description))
+            description = "pdf document in memory"
     } else {
         filename = path.expand(filename)
         if(length(filename) && !file.exists(filename))
