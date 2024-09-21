@@ -44,3 +44,5 @@ export(getMetadata, getInfo)
 
 
 export(getImages2)
+
+export(getHyperlinks)
