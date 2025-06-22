@@ -28,6 +28,5 @@ function(doc, root = getRoot(doc))
 tocTitles =
 function(doc, root = getRoot(doc), list = toc(doc, root))
 {
-    browser()
    unname( sapply(list, `[[`, "Title") )
 }
